@@ -3,64 +3,24 @@ import { takeRandom, uniqBy } from "./utils.js";
 function buildGenericHints(character) {
   const cleanedName = character.name.replace(/[^A-Za-z0-9 ]/g, "").trim();
   const words = cleanedName.split(/\s+/).filter(Boolean);
-  const firstName = words[0] ?? character.name;
-  const surname = words.length > 1 ? words[words.length - 1] : "";
-  const initials = words.map((word) => word[0]?.toUpperCase()).join("");
   const fullLetterCount = words.join("").length;
   const genreLabel = (character.tags ?? []).slice(0, 2).join(" / ");
 
-  const hints = [
-    {
+  const hints = [];
+
+  if (genreLabel) {
+    hints.push({
       tier: 1,
       key: `${character.id}:g:genre`,
-      text: `This answer comes from a ${genreLabel} anime.`,
-    },
-    {
-      tier: 3,
-      key: `${character.id}:g:anime`,
-      text: `This character is from ${character.anime}.`,
-    },
-    {
-      tier: 3,
-      key: `${character.id}:g:initials`,
-      text: `The initials of the full answer are ${initials}.`,
-    },
-    {
-      tier: 3,
-      key: `${character.id}:g:words`,
-      text: `The full answer has ${words.length} word${words.length === 1 ? "" : "s"}.`,
-    },
-    {
-      tier: 3,
-      key: `${character.id}:g:first-start`,
-      text: `The first name starts with ${firstName[0].toUpperCase()}.`,
-    },
-    {
-      tier: 3,
-      key: `${character.id}:g:first-length`,
-      text: `The first name has ${firstName.length} letters.`,
-    },
-    {
-      tier: 3,
-      key: `${character.id}:g:full-length`,
-      text: `The full name has ${fullLetterCount} letters if spaces are ignored.`,
-    },
-  ];
-
-  if (surname) {
-    hints.push(
-      {
-        tier: 3,
-        key: `${character.id}:g:last-start`,
-        text: `The surname starts with ${surname[0].toUpperCase()}.`,
-      },
-      {
-        tier: 3,
-        key: `${character.id}:g:last-length`,
-        text: `The surname has ${surname.length} letters.`,
-      },
-    );
+      text: `The series this character comes from is often described as ${genreLabel}.`,
+    });
   }
+
+  hints.push({
+    tier: 2,
+    key: `${character.id}:g:structure`,
+    text: `Ignoring spaces, the full name of this answer uses ${fullLetterCount} letters in total.`,
+  });
 
   return hints;
 }

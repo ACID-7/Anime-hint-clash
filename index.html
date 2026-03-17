@@ -4,169 +4,141 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anime Hint Clash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="app-shell">
-      <header class="card hero-card">
-        <p class="eyebrow">Netlify-ready anime party game</p>
-        <h1>Anime Hint Clash</h1>
-        <p class="hero-copy">
-          Every round hides one anime character. The game reveals only 10 hints,
-          but each character has a much larger clue pool, so repeat rounds stay
-          fresh. Guess earlier, score higher, and battle your friends on one
-          shared device.
-        </p>
-      </header>
+      <nav class="nav">
+        <a href="#home" class="nav-logo">Anime Hint Clash</a>
+        <div class="nav-links">
+          <a href="#home" class="nav-link" data-page="home">Home</a>
+          <a href="#game" class="nav-link" data-page="game">Play</a>
+          <a href="#leaderboard" class="nav-link" data-page="leaderboard">Leaderboard</a>
+          <a href="#history" class="nav-link" data-page="history">History</a>
+        </div>
+      </nav>
 
-      <section class="stats-grid">
-        <article class="card stat-card">
-          <span>Browser Score</span>
-          <strong id="total-score">0</strong>
-        </article>
-        <article class="card stat-card">
-          <span>Rounds Played</span>
-          <strong id="rounds-played">0</strong>
-        </article>
-        <article class="card stat-card">
-          <span>Streak / Best</span>
-          <strong id="current-streak">0</strong>
-        </article>
-        <article class="card stat-card">
-          <span>Character Pool</span>
-          <strong id="pool-count">0</strong>
-        </article>
-      </section>
+      <!-- PAGE: Home -->
+      <main id="page-home" class="page">
+        <section class="hero">
+          <p class="hero-badge">Guess anime characters from hints</p>
+          <h1 class="hero-title">Anime Hint Clash</h1>
+          <p class="hero-desc">
+            A character is hidden. Hints reveal one by one. Guess early for more points.
+            Pick an anime category or play from the full pool.
+          </p>
+          <a href="#game" class="btn-hero">Start Playing</a>
+        </section>
 
-      <main class="main-grid">
-        <section class="card game-panel">
-          <div class="panel-top">
-            <div>
-              <p class="eyebrow">Main round</p>
-              <h2 id="round-title">No round yet</h2>
-              <p id="round-subtitle">Start a round to begin.</p>
-            </div>
-            <div class="button-group">
-              <button id="start-round" class="primary">Start New Round</button>
-              <button id="next-hint" class="secondary">Reveal Next Hint</button>
-              <button id="give-up" class="danger">Give Up</button>
-            </div>
+        <section class="home-stats">
+          <article class="home-stat">
+            <span class="home-stat-value" id="home-total-score">0</span>
+            <span class="home-stat-label">Total Score</span>
+          </article>
+          <article class="home-stat">
+            <span class="home-stat-value" id="home-streak">0</span>
+            <span class="home-stat-label">Current Streak</span>
+          </article>
+          <article class="home-stat">
+            <span class="home-stat-value" id="home-pool">0</span>
+            <span class="home-stat-label">Characters</span>
+          </article>
+        </section>
+
+        <section class="home-rules">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>Each round hides one anime character. Up to 10 hints are revealed.</li>
+            <li>You get one guess per hint. Correct = points. Wrong = reveal another hint.</li>
+            <li>Earlier guesses score more. Aliases (e.g. Gojo, Luffy) count.</li>
+            <li>Choose an anime category to guess only from that series.</li>
+          </ul>
+        </section>
+      </main>
+
+      <!-- PAGE: Game -->
+      <main id="page-game" class="page">
+        <header class="game-header">
+          <div class="game-header-stats">
+            <span>Score <strong id="total-score">0</strong></span>
+            <span>Streak <strong id="current-streak">0</strong></span>
+            <span>Pool <strong id="pool-count">0</strong></span>
           </div>
+        </header>
 
-          <div class="player-row">
-            <label class="input-group">
-              <span>Player name</span>
-              <input
-                id="player-name"
-                type="text"
-                placeholder="Type your name"
-                maxlength="24"
-                autocomplete="off"
-              />
-            </label>
-
-            <label class="input-group">
-              <span>Anime category</span>
-              <select id="anime-select">
-                <option value="__all__">Any anime</option>
-              </select>
-            </label>
-
-            <div class="pill-row">
-              <span class="pill">10 hints shown max</span>
-              <span class="pill">1 guess per hint</span>
-              <span class="pill">more points = earlier guess</span>
-            </div>
-          </div>
-
-          <div id="message-box" class="message info">
-            Type a name and start guessing.
-          </div>
-
-          <div class="round-grid">
-            <article class="inner-card">
-              <h3>Hints</h3>
-              <ol id="hint-list" class="hint-list"></ol>
-            </article>
-
-            <article class="inner-card">
-              <h3>Guess panel</h3>
-              <form id="guess-form" class="guess-form">
-                <input
-                  id="guess-input"
-                  type="text"
-                  placeholder="Enter the character name"
-                  autocomplete="off"
-                />
-                <button id="guess-button" type="submit">Submit Guess</button>
-              </form>
-              <p id="guess-status" class="guess-status">
-                You can submit one guess per revealed hint.
-              </p>
-
-              <div class="mini-stats">
-                <div>
-                  <span>Hints used</span>
-                  <strong id="hints-used">0</strong>
-                </div>
-                <div>
-                  <span>Wrong guesses</span>
-                  <strong id="wrong-guesses">0</strong>
-                </div>
-                <div>
-                  <span>Possible points</span>
-                  <strong id="possible-points">100</strong>
-                </div>
-              </div>
-
-              <div id="answer-box" class="answer-box hidden"></div>
-
-              <div>
-                <h4>Wrong guesses</h4>
-                <ul id="guess-history" class="guess-history"></ul>
-              </div>
-            </article>
+        <section class="game-setup">
+          <label class="input-group">
+            <span>Player name</span>
+            <input id="player-name" type="text" placeholder="Your name" maxlength="24" autocomplete="off" />
+          </label>
+          <label class="input-group">
+            <span>Anime category</span>
+            <select id="anime-select">
+              <option value="__all__">Any anime</option>
+            </select>
+          </label>
+          <div class="game-actions">
+            <button id="start-round" class="btn-primary">Start Round</button>
+            <button id="next-hint" class="btn-secondary">Next Hint</button>
+            <button id="give-up" class="btn-danger">Give Up</button>
           </div>
         </section>
 
-        <aside class="side-grid">
-          <section class="card side-card">
-            <h3>Party Leaderboard</h3>
-            <div id="leaderboard" class="leaderboard empty">No scores yet.</div>
+        <div id="message-box" class="message info">Choose a category and start a round.</div>
+
+        <div class="game-content">
+          <section class="game-hints">
+            <h3>Hints</h3>
+            <ol id="hint-list" class="hint-list"></ol>
           </section>
 
-          <section class="card side-card">
-            <h3>Recent Rounds</h3>
-            <div id="recent-results" class="recent-results empty">
-              No rounds played yet.
+          <section class="game-guess">
+            <h3>Guess</h3>
+            <form id="guess-form" class="guess-form">
+              <input id="guess-input" type="text" placeholder="Character name" autocomplete="off" />
+              <button id="guess-button" type="submit">Submit</button>
+            </form>
+            <p id="guess-status" class="guess-status">Start a round to guess.</p>
+            <div class="mini-stats">
+              <div><span>Hints</span><strong id="hints-used">0</strong></div>
+              <div><span>Wrong</span><strong id="wrong-guesses">0</strong></div>
+              <div><span>Points</span><strong id="possible-points">100</strong></div>
+            </div>
+            <div id="answer-box" class="answer-box hidden"></div>
+            <div class="guess-history-wrap">
+              <h4>Wrong guesses</h4>
+              <ul id="guess-history" class="guess-history"></ul>
             </div>
           </section>
+        </div>
+      </main>
 
-          <section class="card side-card">
-            <h3>How this version works</h3>
-            <ul class="rule-list">
-              <li>
-                Each character has a bigger clue bank than the 10 hints you
-                actually see.
-              </li>
-              <li>
-                The engine mixes vague, medium, and direct clues so repeats feel
-                different.
-              </li>
-              <li>
-                Recently used characters and recently shown hints are pushed out
-                of rotation first.
-              </li>
-              <li>
-                Aliases work too, so short names like Gojo or Luffy can still
-                count.
-              </li>
-              <li>
-                Everything is static, so it can be hosted straight on Netlify.
-              </li>
-            </ul>
-          </section>
-        </aside>
+      <!-- PAGE: Leaderboard -->
+      <main id="page-leaderboard" class="page">
+        <header class="page-header">
+          <h1>Leaderboard</h1>
+          <p>Top players by total score</p>
+        </header>
+        <section class="leaderboard-page">
+          <div id="leaderboard" class="leaderboard empty">No scores yet.</div>
+        </section>
+      </main>
+
+      <!-- PAGE: History -->
+      <main id="page-history" class="page">
+        <header class="page-header">
+          <h1>Recent Rounds</h1>
+          <p>Your latest games</p>
+        </header>
+        <section class="history-page">
+          <div id="recent-results" class="recent-results empty">No rounds played yet.</div>
+        </section>
       </main>
     </div>
 

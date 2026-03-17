@@ -42,17 +42,10 @@ function makeHints(series, entry) {
     entry.affiliation
       ? `A stronger clue points toward ${entry.affiliation}.`
       : null,
-    `The full answer has ${words.length} word${words.length === 1 ? "" : "s"}.`,
-    `The initials of the answer are ${initials}.`,
   ]);
 
   const direct = uniq([
     `This character is from ${series.anime}.`,
-    `The first name starts with ${firstName[0].toUpperCase()}.`,
-    lastName
-      ? `The surname starts with ${lastName[0].toUpperCase()}.`
-      : `The answer is a single-word name.`,
-    `The first name has ${firstName.length} letters.`,
     aliasHint ? `One accepted alias for this answer is ${aliasHint}.` : null,
   ]);
 
