@@ -1,0 +1,10 @@
+{
+  "name": "anime-hint-clash",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "echo \"Open index.html in your browser\"",
+    "build": "echo \"No build step required\""
+  }
+}
+
