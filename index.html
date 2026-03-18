@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Anime Hint Clash</title>
+    <title>Hint Clash</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,11 +15,13 @@
   <body>
     <div class="app-shell">
       <nav class="nav">
-        <a href="#home" class="nav-logo">Anime Hint Clash</a>
+        <a href="#home" class="nav-logo">Hint Clash</a>
         <div class="nav-links">
           <a href="#home" class="nav-link" data-page="home">Home</a>
           <a href="#game" class="nav-link" data-page="game">Play</a>
-          <a href="#leaderboard" class="nav-link" data-page="leaderboard">Leaderboard</a>
+          <a href="#leaderboard" class="nav-link" data-page="leaderboard"
+            >Leaderboard</a
+          >
           <a href="#history" class="nav-link" data-page="history">History</a>
         </div>
       </nav>
@@ -28,10 +30,10 @@
       <main id="page-home" class="page">
         <section class="hero">
           <p class="hero-badge">Guess anime characters from hints</p>
-          <h1 class="hero-title">Anime Hint Clash</h1>
+          <h1 class="hero-title">Hint Clash</h1>
           <p class="hero-desc">
-            A character is hidden. Hints reveal one by one. Guess early for more points.
-            Pick an anime category or play from the full pool.
+            A character is hidden. Hints reveal one by one. Guess early for more
+            points. Pick an anime category or play from the full pool.
           </p>
           <a href="#game" class="btn-hero">Start Playing</a>
         </section>
@@ -54,9 +56,16 @@
         <section class="home-rules">
           <h2>How to Play</h2>
           <ul class="rules-list">
-            <li>Each round hides one anime character. Up to 10 hints are revealed.</li>
-            <li>You get one guess per hint. Correct = points. Wrong = reveal another hint.</li>
-            <li>Earlier guesses score more. Aliases (e.g. Gojo, Luffy) count.</li>
+            <li>
+              Each round hides one anime character. Up to 10 hints are revealed.
+            </li>
+            <li>
+              You get one guess per hint. Correct = points. Wrong = reveal
+              another hint.
+            </li>
+            <li>
+              Earlier guesses score more. Aliases (e.g. Gojo, Luffy) count.
+            </li>
             <li>Choose an anime category to guess only from that series.</li>
           </ul>
         </section>
@@ -75,12 +84,28 @@
         <section class="game-setup">
           <label class="input-group">
             <span>Player name</span>
-            <input id="player-name" type="text" placeholder="Your name" maxlength="24" autocomplete="off" />
+            <input
+              id="player-name"
+              type="text"
+              placeholder="Your name"
+              maxlength="24"
+              autocomplete="off"
+            />
           </label>
           <label class="input-group">
-            <span>Anime category</span>
+            <span>Pool filter</span>
+            <select id="pool-filter">
+              <option value="__all__">All</option>
+              <option value="__characters__">Anime Characters</option>
+              <option value="__games__">Game Titles</option>
+              <option value="__series__">Specific Series</option>
+            </select>
+          </label>
+
+          <label id="series-filter-label" class="input-group hidden">
+            <span>Specific series</span>
             <select id="anime-select">
-              <option value="__all__">Any anime</option>
+              <option value="__all__">Any series</option>
             </select>
           </label>
           <div class="game-actions">
@@ -90,7 +115,9 @@
           </div>
         </section>
 
-        <div id="message-box" class="message info">Choose a category and start a round.</div>
+        <div id="message-box" class="message info">
+          Choose a pool filter and start a round.
+        </div>
 
         <div class="game-content">
           <section class="game-hints">
@@ -101,14 +128,23 @@
           <section class="game-guess">
             <h3>Guess</h3>
             <form id="guess-form" class="guess-form">
-              <input id="guess-input" type="text" placeholder="Character name" autocomplete="off" />
+              <input
+                id="guess-input"
+                type="text"
+                placeholder="Answer name"
+                autocomplete="off"
+              />
               <button id="guess-button" type="submit">Submit</button>
             </form>
-            <p id="guess-status" class="guess-status">Start a round to guess.</p>
+            <p id="guess-status" class="guess-status">
+              Start a round to guess.
+            </p>
             <div class="mini-stats">
               <div><span>Hints</span><strong id="hints-used">0</strong></div>
               <div><span>Wrong</span><strong id="wrong-guesses">0</strong></div>
-              <div><span>Points</span><strong id="possible-points">100</strong></div>
+              <div>
+                <span>Points</span><strong id="possible-points">100</strong>
+              </div>
             </div>
             <div id="answer-box" class="answer-box hidden"></div>
             <div class="guess-history-wrap">
@@ -137,7 +173,9 @@
           <p>Your latest games</p>
         </header>
         <section class="history-page">
-          <div id="recent-results" class="recent-results empty">No rounds played yet.</div>
+          <div id="recent-results" class="recent-results empty">
+            No rounds played yet.
+          </div>
         </section>
       </main>
     </div>

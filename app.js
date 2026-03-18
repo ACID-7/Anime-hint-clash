@@ -21,6 +21,7 @@ const MAX_HINTS = 10;
 const state = {
   data: loadGameData(),
   round: null,
+  poolFilter: "__all__",
   selectedAnime: "__all__",
   page: "home",
 };
@@ -36,7 +37,9 @@ const els = {
   nextHint: document.querySelector("#next-hint"),
   giveUp: document.querySelector("#give-up"),
   playerName: document.querySelector("#player-name"),
+  poolFilter: document.querySelector("#pool-filter"),
   animeSelect: document.querySelector("#anime-select"),
+  seriesFilterLabel: document.querySelector("#series-filter-label"),
   messageBox: document.querySelector("#message-box"),
   hintList: document.querySelector("#hint-list"),
   guessForm: document.querySelector("#guess-form"),
@@ -63,10 +66,30 @@ function setMessage(text, tone = "info") {
 }
 
 function getFilteredCharacters() {
-  if (!state.selectedAnime || state.selectedAnime === "__all__") {
-    return characters;
+  let pool = characters;
+
+  if (state.poolFilter === "__characters__") {
+    pool = pool.filter((c) => c.type === "character");
+  } else if (state.poolFilter === "__games__") {
+    pool = pool.filter((c) => c.type === "game");
+  } else if (state.poolFilter === "__series__") {
+    if (state.selectedAnime && state.selectedAnime !== "__all__") {
+      pool = pool.filter((c) => c.anime === state.selectedAnime);
+    }
   }
-  return characters.filter((c) => c.anime === state.selectedAnime);
+
+  return pool;
+}
+
+function updatePoolFilterUI() {
+  const isSeries = state.poolFilter === "__series__";
+
+  if (els.seriesFilterLabel) {
+    els.seriesFilterLabel.classList.toggle("hidden", !isSeries);
+  }
+  if (els.animeSelect) {
+    els.animeSelect.disabled = !isSeries;
+  }
 }
 
 function pickCharacter() {
@@ -86,6 +109,22 @@ function canGuessNow() {
   );
 }
 
+function getSelectionLabel() {
+  switch (state.poolFilter) {
+    case "__characters__":
+      return "Anime Characters";
+    case "__games__":
+      return "Game Titles";
+    case "__series__":
+      return state.selectedAnime && state.selectedAnime !== "__all__"
+        ? `Series: ${state.selectedAnime}`
+        : "Any series";
+    case "__all__":
+    default:
+      return "All anime characters + game titles";
+  }
+}
+
 function calculateRoundScore(round) {
   const revealPenalty = (round.revealedCount - 1) * 9;
   const wrongPenalty = round.wrongGuesses * 7;
@@ -102,7 +141,7 @@ function isCorrectGuess(guess, character) {
 function startRound() {
   const character = pickCharacter();
   if (!character) {
-    setMessage("No characters for this anime. Try another category.", "error");
+    setMessage("No characters for this selection. Try another filter.", "error");
     state.round = null;
     render();
     return;
@@ -124,7 +163,10 @@ function startRound() {
 
   els.guessInput.value = "";
   revealHint({ silent: true });
-  setMessage("Round started. Read the first hint and guess early for more points.", "info");
+  setMessage(
+    `Round started (${getSelectionLabel()}). Read the first hint and guess early for more points.`,
+    "info",
+  );
   render();
 }
 
@@ -145,7 +187,8 @@ function revealHint({ silent = false } = {}) {
 
   state.round.revealedCount += 1;
   state.round.seenHintCount = state.round.revealedCount;
-  if (!silent) setMessage(`Hint ${state.round.revealedCount} revealed.`, "info");
+  if (!silent)
+    setMessage(`Hint ${state.round.revealedCount} revealed.`, "info");
   render();
 }
 
@@ -169,12 +212,18 @@ function finishRound(won) {
     state.data.totalScore += round.score;
     state.data.streak += 1;
     state.data.bestStreak = Math.max(state.data.bestStreak, state.data.streak);
-    setMessage(`Correct! ${round.character.name} from ${round.character.anime}. +${round.score} pts.`, "success");
+    setMessage(
+      `Correct! ${round.character.name} from ${round.character.anime}. +${round.score} pts.`,
+      "success",
+    );
   } else {
     round.score = 0;
     round.revealedCount = round.deck.length;
     state.data.streak = 0;
-    setMessage(`Round over. Answer: ${round.character.name} from ${round.character.anime}.`, "error");
+    setMessage(
+      `Round over. Answer: ${round.character.name} from ${round.character.anime}.`,
+      "error",
+    );
   }
 
   pushRecentCharacter(state.data, round.character.id);
@@ -230,9 +279,11 @@ function handleGuess(e) {
 function renderStats() {
   const pool = getFilteredCharacters().length;
   if (els.totalScore) els.totalScore.textContent = state.data.totalScore;
-  if (els.currentStreak) els.currentStreak.textContent = `${state.data.streak} / best ${state.data.bestStreak}`;
+  if (els.currentStreak)
+    els.currentStreak.textContent = `${state.data.streak} / best ${state.data.bestStreak}`;
   if (els.poolCount) els.poolCount.textContent = pool;
-  if (els.homeTotalScore) els.homeTotalScore.textContent = state.data.totalScore;
+  if (els.homeTotalScore)
+    els.homeTotalScore.textContent = state.data.totalScore;
   if (els.homeStreak) els.homeStreak.textContent = state.data.streak;
   if (els.homePool) els.homePool.textContent = pool;
 }
@@ -240,21 +291,26 @@ function renderStats() {
 function renderHints(round) {
   if (!els.hintList) return;
   if (!round) {
-    els.hintList.innerHTML = Array.from({ length: MAX_HINTS }, (_, i) => `
+    els.hintList.innerHTML = Array.from(
+      { length: MAX_HINTS },
+      (_, i) => `
       <li class="hint-item locked">
         <span class="hint-number">Hint ${i + 1}</span>
         <p>Start a round to reveal.</p>
       </li>
-    `).join("");
+    `,
+    ).join("");
     return;
   }
 
-  els.hintList.innerHTML = round.deck.map((hint, i) => {
-    if (i < round.revealedCount) {
-      return `<li class="hint-item revealed"><span class="hint-number">Hint ${i + 1}</span><p>${escapeHtml(hint.text)}</p></li>`;
-    }
-    return `<li class="hint-item locked"><span class="hint-number">Hint ${i + 1}</span><p>Locked</p></li>`;
-  }).join("");
+  els.hintList.innerHTML = round.deck
+    .map((hint, i) => {
+      if (i < round.revealedCount) {
+        return `<li class="hint-item revealed"><span class="hint-number">Hint ${i + 1}</span><p>${escapeHtml(hint.text)}</p></li>`;
+      }
+      return `<li class="hint-item locked"><span class="hint-number">Hint ${i + 1}</span><p>Locked</p></li>`;
+    })
+    .join("");
 }
 
 function renderAnswer(round) {
@@ -265,12 +321,14 @@ function renderAnswer(round) {
     return;
   }
   const aliases = (round.character.aliases ?? []).filter(Boolean);
-  const aliasLine = aliases.length ? `<p><span class="label">Aliases:</span> ${escapeHtml(aliases.join(", "))}</p>` : "";
+  const aliasLine = aliases.length
+    ? `<p><span class="label">Aliases:</span> ${escapeHtml(aliases.join(", "))}</p>`
+    : "";
   els.answerBox.classList.remove("hidden");
   els.answerBox.innerHTML = `
     <div class="answer-tag ${round.won ? "won" : "lost"}">${round.won ? "Solved" : "Revealed"}</div>
     <h4>${escapeHtml(round.character.name)}</h4>
-    <p><span class="label">Anime:</span> ${escapeHtml(round.character.anime)}</p>
+    <p><span class="label">Series:</span> ${escapeHtml(round.character.anime)}</p>
     <p><span class="label">Score:</span> ${round.score} • Hints: ${round.seenHintCount ?? round.revealedCount}</p>
     ${aliasLine}
   `;
@@ -282,7 +340,9 @@ function renderGuessHistory(round) {
     els.guessHistory.innerHTML = '<li class="empty-chip">None yet</li>';
     return;
   }
-  els.guessHistory.innerHTML = round.guessHistory.map((g) => `<li class="guess-chip">${escapeHtml(g)}</li>`).join("");
+  els.guessHistory.innerHTML = round.guessHistory
+    .map((g) => `<li class="guess-chip">${escapeHtml(g)}</li>`)
+    .join("");
 }
 
 function renderRound() {
@@ -291,26 +351,45 @@ function renderRound() {
   renderAnswer(round);
   renderGuessHistory(round);
 
-  if (!els.hintsUsed || !els.wrongGuesses || !els.possiblePoints || !els.guessStatus) return;
+  if (
+    !els.hintsUsed ||
+    !els.wrongGuesses ||
+    !els.possiblePoints ||
+    !els.guessStatus
+  )
+    return;
 
   const allowGuess = canGuessNow();
-  const scorePreview = round ? (round.finished ? round.score : calculateRoundScore(round)) : 100;
-  const hintUsage = round ? (round.finished ? (round.seenHintCount ?? round.revealedCount) : round.revealedCount) : 0;
+  const scorePreview = round
+    ? round.finished
+      ? round.score
+      : calculateRoundScore(round)
+    : 100;
+  const hintUsage = round
+    ? round.finished
+      ? (round.seenHintCount ?? round.revealedCount)
+      : round.revealedCount
+    : 0;
 
   els.hintsUsed.textContent = hintUsage;
   els.wrongGuesses.textContent = round ? round.wrongGuesses : 0;
   els.possiblePoints.textContent = scorePreview;
 
   if (!round) els.guessStatus.textContent = "Start a round to guess.";
-  else if (round.finished && round.won) els.guessStatus.textContent = `Solved in ${hintUsage} hints.`;
-  else if (round.finished) els.guessStatus.textContent = "Round ended. Start a new one.";
+  else if (round.finished && round.won)
+    els.guessStatus.textContent = `Solved in ${hintUsage} hints.`;
+  else if (round.finished)
+    els.guessStatus.textContent = "Round ended. Start a new one.";
   else if (allowGuess) els.guessStatus.textContent = "You can guess now.";
-  else if (round.revealedCount >= round.deck.length) els.guessStatus.textContent = "No more hints. Give up or start over.";
+  else if (round.revealedCount >= round.deck.length)
+    els.guessStatus.textContent = "No more hints. Give up or start over.";
   else els.guessStatus.textContent = "Reveal another hint to guess again.";
 
   if (els.guessInput) els.guessInput.disabled = !allowGuess;
   if (els.guessButton) els.guessButton.disabled = !allowGuess;
-  if (els.nextHint) els.nextHint.disabled = !round || round.finished || round.revealedCount >= round.deck.length;
+  if (els.nextHint)
+    els.nextHint.disabled =
+      !round || round.finished || round.revealedCount >= round.deck.length;
   if (els.giveUp) els.giveUp.disabled = !round || round.finished;
 }
 
@@ -323,7 +402,9 @@ function renderLeaderboard() {
     return;
   }
   els.leaderboard.className = "leaderboard";
-  els.leaderboard.innerHTML = lb.map((e, i) => `
+  els.leaderboard.innerHTML = lb
+    .map(
+      (e, i) => `
     <div class="leader-entry">
       <div class="leader-rank">#${i + 1}</div>
       <div class="leader-meta">
@@ -332,7 +413,9 @@ function renderLeaderboard() {
       </div>
       <div class="leader-total">${e.totalScore}</div>
     </div>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 function renderRecentResults() {
@@ -344,7 +427,9 @@ function renderRecentResults() {
     return;
   }
   els.recentResults.className = "recent-results";
-  els.recentResults.innerHTML = results.map((r) => `
+  els.recentResults.innerHTML = results
+    .map(
+      (r) => `
     <article class="result-card ${r.won ? "won" : "lost"}">
       <div class="result-top">
         <strong>${escapeHtml(r.player)}</strong>
@@ -354,7 +439,9 @@ function renderRecentResults() {
       <p class="result-line">${r.score} pts • ${r.hintsUsed} hints • ${r.wrongGuesses} wrong</p>
       <p class="result-time">${escapeHtml(r.time)}</p>
     </article>
-  `).join("");
+  `,
+    )
+    .join("");
 }
 
 function render() {
@@ -366,8 +453,12 @@ function render() {
 
 function showPage(page) {
   state.page = page;
-  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
-  document.querySelectorAll(".nav-link").forEach((a) => a.classList.remove("active"));
+  document
+    .querySelectorAll(".page")
+    .forEach((p) => p.classList.remove("active"));
+  document
+    .querySelectorAll(".nav-link")
+    .forEach((a) => a.classList.remove("active"));
   const pageEl = document.getElementById(`page-${page}`);
   const linkEl = document.querySelector(`.nav-link[data-page="${page}"]`);
   if (pageEl) pageEl.classList.add("active");
@@ -395,7 +486,9 @@ function initRouting() {
 
 function initAnimeSelect() {
   if (!els.animeSelect) return;
-  const unique = [...new Set(characters.map((c) => c.anime))].sort((a, b) => a.localeCompare(b));
+  const unique = [...new Set(characters.map((c) => c.anime))].sort((a, b) =>
+    a.localeCompare(b),
+  );
   unique.forEach((anime) => {
     const opt = document.createElement("option");
     opt.value = anime;
@@ -408,19 +501,23 @@ function initAnimeSelect() {
 function bindEvents() {
   if (els.startRound) els.startRound.addEventListener("click", startRound);
   if (els.nextHint) els.nextHint.addEventListener("click", () => revealHint());
-  if (els.giveUp) els.giveUp.addEventListener("click", () => finishRound(false));
+  if (els.giveUp)
+    els.giveUp.addEventListener("click", () => finishRound(false));
   if (els.guessForm) els.guessForm.addEventListener("submit", handleGuess);
+  if (els.poolFilter) {
+    els.poolFilter.addEventListener("change", () => {
+      state.poolFilter = els.poolFilter.value;
+      state.round = null;
+      updatePoolFilterUI();
+      startRound();
+    });
+  }
   if (els.animeSelect) {
     els.animeSelect.addEventListener("change", () => {
+      if (state.poolFilter !== "__series__") return;
       state.selectedAnime = els.animeSelect.value;
       state.round = null;
-      setMessage(
-        state.selectedAnime === "__all__"
-          ? "All anime selected. Start a new round."
-          : `Category: ${state.selectedAnime}. Start a round.`,
-        "info"
-      );
-      render();
+      startRound();
     });
   }
   if (els.playerName) {
@@ -432,8 +529,11 @@ function bindEvents() {
 }
 
 function init() {
-  if (els.playerName) els.playerName.value = state.data.preferredPlayerName ?? "";
+  if (els.playerName)
+    els.playerName.value = state.data.preferredPlayerName ?? "";
   initAnimeSelect();
+  if (els.poolFilter) els.poolFilter.value = state.poolFilter;
+  updatePoolFilterUI();
   initRouting();
   bindEvents();
   render();
